@@ -904,12 +904,62 @@ namespace TSP
             return result;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pheremones"></param>
+        /// <param name="edges"></param>
+        /// <returns></returns>
         int selectEdge(List<double> pheremones, List<double> edges)
         {
             int result = 0;
 
-            //TODO: SELECT EDGE
+            double total = 0;
+            double newTotal = 0;
+            double probabilityTotal = 0;
+            Dictionary<double, double> probability = new Dictionary<double, double>();
+            Random rnd = new Random();
 
+            foreach(double edge in edges)
+            {
+                if (edge != Double.PositiveInfinity)
+                {
+                    total += edge;
+                }
+            }
+
+            foreach (double edge in edges)
+            {
+                if (edge != Double.PositiveInfinity)
+                {
+                    double num = total - edge;
+                    newTotal += num;
+                }
+            }
+
+            foreach(double edge in edges)
+            {
+                if(edge != Double.PositiveInfinity)
+                {
+                    double num = total - edge;
+                    double prob = (num / newTotal) * 100;
+                    probabilityTotal += prob;
+                    probability.Add(edge, probabilityTotal);
+                }
+            }
+            double random = rnd.NextDouble() * (100);
+
+            double returnEdge = 0;
+            foreach(var prob in probability)
+            {
+                if(random < prob.Value)
+                {
+                    returnEdge = prob.Key;
+                    break;
+                }
+            }
+
+            result = edges.IndexOf(returnEdge);
             return result;
         }
 
