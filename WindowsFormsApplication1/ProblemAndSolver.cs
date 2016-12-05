@@ -818,11 +818,59 @@ namespace TSP
         public string[] greedySolveProblem()
         {
             string[] results = new string[3];
-            
-            // TODO: Add your implementation for a greedy solver here.
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+
+            var myList = new List<City> { };
+            HashSet<City> mySet = new HashSet<City> { };
+            foreach (City c in Cities)
+            {
+                myList.Add(c);
+            }
+            City firstCity = myList[0];
+            myList.RemoveAt(0);
+            mySet.Add(firstCity);
+            while (myList.Count != 0)
+            {
+                double lowest = 0;
+                int index = 0;
+                bool firstTime = true;
+                for (int i = 0; i < myList.Count; i++)
+                {
+                    double cost = firstCity.costToGetTo(myList[i]);
+                    if (firstTime)
+                    {
+                        lowest = cost;
+                        index = i;
+                        firstTime = false;
+                    }
+                    else if (cost < lowest)
+                    {
+                        lowest = cost;
+                        index = i;
+                    }
+                }
+                firstCity = myList[index];
+                myList.RemoveAt(index);
+                mySet.Add(firstCity);
+            }
+
+            ArrayList myArray = new ArrayList { };
+            foreach (City c in mySet)
+            {
+                myArray.Add(c);
+            }
+
+            bssf = new TSPSolution(new ArrayList(myArray)); //get cost from here
+
+            stopWatch.Stop();
+            TimeSpan ts = stopWatch.Elapsed;
+            string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
+            ts.Hours, ts.Minutes, ts.Seconds,
+            ts.Milliseconds / 10);
 
             results[COST] = "not implemented";    // load results into array here, replacing these dummy values
-            results[TIME] = "-1";
+            results[TIME] = elapsedTime;
             results[COUNT] = "-1";
 
             return results;
@@ -844,20 +892,20 @@ namespace TSP
             
             List<List<double>> graph = generateGraph();
 
-            List<List<double>> pheremones = new List<List<double>>();
+            List<List<double>> graphWithPheremones = new List<List<double>>();
             for (int i = 0; i < graph.Count; i++)
             {
-                pheremones.Add(new List<double>());
+                graphWithPheremones.Add(new List<double>());
                 for(int j = 0; j < graph.Count; j++)
                 {
-                    pheremones[i].Add(0.0);
+                    graphWithPheremones[i].Add(0.0);
                 }
             }
 
             for (int i = 0; i < iterations; i++)
             {
-                sendAntResult = sendAnt(graph, pheremones, pheremoneRate);
-                pheremones = sendAntResult.NewPheremones;
+                sendAntResult = sendAnt(graph, graphWithPheremones, pheremoneRate);
+                graphWithPheremones = sendAntResult.NewPheremones;
                 //TODO: update bssf if new cost is less than old cost.
             }
             
@@ -889,7 +937,7 @@ namespace TSP
                 {
                     return new SendAntResult(double.PositiveInfinity, null, pheremones);
                 }
-
+                resultRoute.Add(nextEdge);
                 cost += graph[currentNode][nextEdge];
                 graph = clearRowAndColumn(graph, currentNode, nextEdge);
                 currentNode = nextEdge;
