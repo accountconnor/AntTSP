@@ -886,14 +886,19 @@ namespace TSP
             
 
             Tuple<double, List<int>> bestPath = new Tuple<double, List<int>>(double.PositiveInfinity, new List<int>());
-            double pheromoneRate = 0.00001;
-            int iterations = 1000;
+            double pheromoneRate = 0.000001;
+            int iterations = 10000;
             SendAntResult sendAntResult;
             timer.Start();
             
             List<List<double>> graph = generateGraph();
 
-            double standard = findUpperBound(graph).Item1;
+            greedySolveProblem();
+            double standard = double.PositiveInfinity;
+            if (bssf != null)
+            {
+                standard = findUpperBound(graph).Item1;//bssf.costOfRoute();
+            }
 
             List<List<double>> graphWithPheromones = new List<List<double>>();
             for (int i = 0; i < graph.Count; i++)
@@ -914,17 +919,18 @@ namespace TSP
                     bestPath = Tuple.Create<double, List<int>>(sendAntResult.Cost, sendAntResult.Route);
                 }
             }
-
-            ArrayList foundBSSF = new ArrayList();
-            for (int i = 0; i < bestPath.Item2.Count; i++)
-            {
-                foundBSSF.Add(Cities[bestPath.Item2[i]]);
-            }
-            bssf = new TSPSolution(foundBSSF);
-
+            //if (bestPath.Item1 < bssf.costOfRoute())
+            //{
+                ArrayList foundBSSF = new ArrayList();
+                for (int i = 0; i < bestPath.Item2.Count; i++)
+                {
+                    foundBSSF.Add(Cities[bestPath.Item2[i]]);
+                }
+                bssf = new TSPSolution(foundBSSF);
+            //}
             timer.Stop();
 
-            results[COST] = bestPath.Item1.ToString();
+            results[COST] = bssf.costOfRoute().ToString();
             results[TIME] = timer.Elapsed.ToString();
             results[COUNT] = "-1";
 
@@ -984,7 +990,7 @@ namespace TSP
                 
             }
 
-            graphWithPheromones = updateGraphWithPheromones(resultRoute, graphWithPheromones, pheromoneRate * Math.Pow(standard/cost,3));
+            //graphWithPheromones = updateGraphWithPheromones(resultRoute, graphWithPheromones, pheromoneRate * Math.Pow(standard/cost,10));
 
             SendAntResult result = new SendAntResult(cost, resultRoute, graphWithPheromones);
 
@@ -1098,7 +1104,7 @@ namespace TSP
             {
                 if (edges[i] != Double.PositiveInfinity)
                 {
-                    if (random < probability[i])
+                    if (random <= probability[i])
                     {
                         returnEdge = i;
                         break;
