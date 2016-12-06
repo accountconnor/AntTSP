@@ -850,6 +850,7 @@ namespace TSP
                         index = i;
                     }
                 }
+
                 firstCity = myList[index];
                 myList.RemoveAt(index);
                 mySet.Add(firstCity);
@@ -880,42 +881,51 @@ namespace TSP
         {
             string[] results = new string[3];
 
-
             Stopwatch timer = new Stopwatch();
-            int count = 0;
-            int bssfUpdateCount = 0;
-            int greatestTotalStates = 0;
-            double pheremoneRate = 1.0;
-            int iterations = 10000;
+
+            
+
+            Tuple<double, List<int>> bestPath = new Tuple<double, List<int>>(double.PositiveInfinity, new List<int>());
+            double pheromoneRate = 0.00001;
+            int iterations = 1000;
             SendAntResult sendAntResult;
             timer.Start();
             
             List<List<double>> graph = generateGraph();
 
-            List<List<double>> graphWithPheremones = new List<List<double>>();
+            double standard = findUpperBound(graph).Item1;
+
+            List<List<double>> graphWithPheromones = new List<List<double>>();
             for (int i = 0; i < graph.Count; i++)
             {
-                graphWithPheremones.Add(new List<double>());
+                graphWithPheromones.Add(new List<double>());
                 for(int j = 0; j < graph.Count; j++)
                 {
-                    graphWithPheremones[i].Add(0.0);
+                    graphWithPheromones[i].Add(graph[i][j]);
                 }
             }
 
             for (int i = 0; i < iterations; i++)
             {
-                sendAntResult = sendAnt(graph, graphWithPheremones, pheremoneRate);
-                graphWithPheremones = sendAntResult.NewPheremones;
-                //TODO: update bssf if new cost is less than old cost.
+                sendAntResult = sendAnt(graph, graphWithPheromones, pheromoneRate, standard);
+                graphWithPheromones = sendAntResult.Newpheromones;
+                if (bestPath.Item1 > sendAntResult.Cost)
+                {
+                    bestPath = Tuple.Create<double, List<int>>(sendAntResult.Cost, sendAntResult.Route);
+                }
             }
-            
-            //TODO: find result route from pheremone trail. Or, we could just send the bssf.
 
+            ArrayList foundBSSF = new ArrayList();
+            for (int i = 0; i < bestPath.Item2.Count; i++)
+            {
+                foundBSSF.Add(Cities[bestPath.Item2[i]]);
+            }
+            bssf = new TSPSolution(foundBSSF);
 
-                ///////////////////////////////////////////////////////////////
+            timer.Stop();
 
-            results[COST] = "not implemented";    // load results into array here, replacing these dummy values
-            results[TIME] = "-1";
+            results[COST] = bestPath.Item1.ToString();
+            results[TIME] = timer.Elapsed.ToString();
             results[COUNT] = "-1";
 
             return results;
@@ -924,52 +934,189 @@ namespace TSP
         // Generate random tours through the graph to get an idea as to what
         // the upper bound might be. It's O(n) where n is the size of the graph,
         // but there's a big constant of 100000 attached to that.
-        public SendAntResult sendAnt(List<List<double>> graph, List<List<double>> pheremones, double pheremoneRate)
+        public SendAntResult sendAnt(List<List<double>> graph, List<List<double>> graphWithPheromones, double pheromoneRate, double standard)
         {
-            List<int> resultRoute = new List<int>();
-            double cost = 0.0;
-
-            int currentNode = 0;
-            int nextEdge = 0;
-            while(nextEdge == 0){
-                nextEdge = selectEdge(pheremones[currentNode], graph[currentNode]);
-                if (nextEdge == -1)
+            List<List<double>> editableGraph = new List<List<double>>(); //Do a deep copy
+            for(int i = 0; i < graphWithPheromones.Count; i++)
+            {
+                editableGraph.Add(new List<double>());
+                for(int j = 0; j < graphWithPheromones.Count; j++)
                 {
-                    return new SendAntResult(double.PositiveInfinity, null, pheremones);
+                    editableGraph[i].Add(graphWithPheromones[i][j]);
                 }
-                resultRoute.Add(nextEdge);
-                cost += graph[currentNode][nextEdge];
-                graph = clearRowAndColumn(graph, currentNode, nextEdge);
-                currentNode = nextEdge;
             }
 
-            
-            //TODO: modify pheremones
-           
+            List<int> resultRoute = new List<int>();
+            double cost = 0.0;
+            Random rnd = new Random();
 
-            SendAntResult result = new SendAntResult(cost, resultRoute, pheremones);
+            int currentNode = 0;
+            int nextEdge = -1;
+            while(nextEdge != 0){
+                nextEdge = selectEdge(/*graphWithPheromones[currentNode],*/ editableGraph[currentNode]);
+                if (nextEdge == -1)
+                {
+                    return new SendAntResult(double.PositiveInfinity, null, graphWithPheromones);
+                }
+                if(nextEdge != 0 || resultRoute.Count == editableGraph.Count - 1)
+                {
+                    resultRoute.Add(nextEdge);
+                    cost += graph[currentNode][nextEdge];
+                    editableGraph = clearRowAndColumn(editableGraph, currentNode, nextEdge);
+                    currentNode = nextEdge;
+                }
+                else
+                {
+                    bool end = true;
+                    for(int i = 1; i < editableGraph[currentNode].Count; i++)
+                    {
+                        if (!double.IsPositiveInfinity(editableGraph[currentNode][i]))
+                        {
+                            end = false;
+                        }
+                    }
+                    if (end)
+                    {
+                        return new SendAntResult(double.PositiveInfinity, null, graphWithPheromones);
+                    }
+                    nextEdge = -1;
+                }
+                
+            }
+
+            graphWithPheromones = updateGraphWithPheromones(resultRoute, graphWithPheromones, pheromoneRate * Math.Pow(standard/cost,3));
+
+            SendAntResult result = new SendAntResult(cost, resultRoute, graphWithPheromones);
 
             return result;
         }
 
-        int selectEdge(List<double> pheremones, List<double> edges)
+        List<List<double>> updateGraphWithPheromones(List<int> route, List<List<double>> graphWithPheromones, double pheromoneRate)
+        {
+            List<List<double>> result = new List<List<double>>();
+            for(int i = 0; i < graphWithPheromones.Count; i++)
+            {
+                result.Add(new List<double>());
+                for (int j = 0; j < graphWithPheromones.Count; j++)
+                {
+                    result[i].Add(graphWithPheromones[i][j]);
+                }
+            }
+
+            Dictionary<int, int> edgesInRoute = new Dictionary<int, int>();
+            int fromNode = 0;
+            for (int i = 0; i < route.Count; i++)
+            {
+                edgesInRoute[fromNode] = route[i];
+                fromNode = route[i];
+            }
+
+            double total;
+            double newTotal;
+            double num;
+            foreach (int key in edgesInRoute.Keys)
+            {
+                total = 0.0;
+                newTotal = 0.0;
+
+                foreach (double edge in result[key])
+                {
+                    if (edge != Double.PositiveInfinity)
+                    {
+                        total += edge;
+                    }
+                }
+
+                foreach (double edge in result[key])
+                {
+                    if (edge != Double.PositiveInfinity)
+                    {
+                        num = total - edge;
+                        newTotal += num;
+                    }
+                }
+                if (result[key][edgesInRoute[key]] - (pheromoneRate * newTotal) > 10)
+                {
+                    result[key][edgesInRoute[key]] -= (pheromoneRate * newTotal);
+                }
+                else
+                {
+                    Console.Write("I broke");
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pheromones"></param>
+        /// <param name="edges"></param>
+        /// <returns></returns>
+        int selectEdge(/*List<double> pheromones,*/ List<double> edges)
         {
             int result = 0;
 
-            //TODO: SELECT EDGE
+            double total = 0;
+            double newTotal = 0;
+            double probabilityTotal = 0;
+            Dictionary<int, double> probability = new Dictionary<int, double>();
+            Random rnd = new Random();
 
-            return result;
+            foreach(double edge in edges)
+            {
+                if (edge != Double.PositiveInfinity)
+                {
+                    total += edge;
+                }
+            }
+
+            foreach (double edge in edges)
+            {
+                if (edge != Double.PositiveInfinity)
+                {
+                    double num = total - edge;
+                    newTotal += num;
+                }
+            }
+
+            for(int i = 0; i < edges.Count; i++)
+            {
+                if(edges[i] != Double.PositiveInfinity)
+                {
+                    double num = total - edges[i];
+                    double prob = (num / newTotal) * 100;
+                    probabilityTotal += prob;
+                    probability.Add(i, probabilityTotal);
+                }
+            }
+            double random = rnd.NextDouble() * (100);
+
+            int returnEdge = 0;
+            for( int i = 0; i < edges.Count; i++)
+            {
+                if (edges[i] != Double.PositiveInfinity)
+                {
+                    if (random < probability[i])
+                    {
+                        returnEdge = i;
+                        break;
+                    }
+                }
+            }
+            return returnEdge;
         }
 
         public class SendAntResult
         {
             public double Cost { get; set; }
             public List<int> Route { get; set; }
-            public List<List<double>> NewPheremones { get; set; }
-            public SendAntResult(double cost, List<int> route, List<List<double>> newPheremones) {
+            public List<List<double>> Newpheromones { get; set; }
+            public SendAntResult(double cost, List<int> route, List<List<double>> newpheromones) {
                 Cost = cost;
                 Route = route;
-                NewPheremones = newPheremones;
+                Newpheromones = newpheromones;
             }
         }
 
