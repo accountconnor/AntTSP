@@ -95,7 +95,7 @@ namespace TSP
         /// <summary>
         /// best solution so far. 
         /// </summary>
-        private TSPSolution bssf; 
+        private TSPSolution bssf;
 
         /// <summary>
         /// how to color various things. 
@@ -137,10 +137,10 @@ namespace TSP
         /// <summary>
         /// These three constants are used for convenience/clarity in populating and accessing the results array that is passed back to the calling Form
         /// </summary>
-        public const int COST = 0;           
+        public const int COST = 0;
         public const int TIME = 1;
         public const int COUNT = 2;
-        
+
         public int Size
         {
             get { return _size; }
@@ -155,7 +155,7 @@ namespace TSP
         #region Constructors
         public ProblemAndSolver()
         {
-            this._seed = 1; 
+            this._seed = 1;
             rnd = new Random(1);
             this._size = DEFAULT_SIZE;
             this.time_limit = TIME_LIMIT * 1000;                  // TIME_LIMIT is in seconds, but timer wants it in milliseconds
@@ -187,7 +187,7 @@ namespace TSP
             this._seed = seed;
             this._size = size;
             rnd = new Random(seed);
-            this.time_limit = time*1000;                        // time is entered in the GUI in seconds, but timer wants it in milliseconds
+            this.time_limit = time * 1000;                        // time is entered in the GUI in seconds, but timer wants it in milliseconds
 
             this.resetData();
         }
@@ -226,7 +226,7 @@ namespace TSP
 
             cityBrushStyle = new SolidBrush(Color.Black);
             cityBrushStartStyle = new SolidBrush(Color.Red);
-            routePenStyle = new Pen(Color.Blue,1);
+            routePenStyle = new Pen(Color.Blue, 1);
             routePenStyle.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
         }
 
@@ -253,7 +253,7 @@ namespace TSP
         {
             this._size = size;
             this._mode = mode;
-            this.time_limit = timelimit*1000;                                   //convert seconds to milliseconds
+            this.time_limit = timelimit * 1000;                                   //convert seconds to milliseconds
             resetData();
         }
 
@@ -275,8 +275,8 @@ namespace TSP
         /// <param name="g">where to draw the stuff</param>
         public void Draw(Graphics g)
         {
-            float width  = g.VisibleClipBounds.Width-45F;
-            float height = g.VisibleClipBounds.Height-45F;
+            float width = g.VisibleClipBounds.Width - 45F;
+            float height = g.VisibleClipBounds.Height - 45F;
             Font labelFont = new Font("Arial", 10);
 
             // Draw lines
@@ -287,10 +287,10 @@ namespace TSP
                 int index = 0;
                 foreach (City c in bssf.Route)
                 {
-                    if (index < bssf.Route.Count -1)
-                        g.DrawString(" " + index +"("+c.costToGetTo(bssf.Route[index+1]as City)+")", labelFont, cityBrushStartStyle, new PointF((float)c.X * width + 3F, (float)c.Y * height));
-                    else 
-                        g.DrawString(" " + index +"("+c.costToGetTo(bssf.Route[0]as City)+")", labelFont, cityBrushStartStyle, new PointF((float)c.X * width + 3F, (float)c.Y * height));
+                    if (index < bssf.Route.Count - 1)
+                        g.DrawString(" " + index + "(" + c.costToGetTo(bssf.Route[index + 1] as City) + ")", labelFont, cityBrushStartStyle, new PointF((float)c.X * width + 3F, (float)c.Y * height));
+                    else
+                        g.DrawString(" " + index + "(" + c.costToGetTo(bssf.Route[0] as City) + ")", labelFont, cityBrushStartStyle, new PointF((float)c.X * width + 3F, (float)c.Y * height));
                     ps[index++] = new Point((int)(c.X * width) + CITY_ICON_SIZE / 2, (int)(c.Y * height) + CITY_ICON_SIZE / 2);
                 }
 
@@ -316,12 +316,12 @@ namespace TSP
         ///  return the cost of the best solution so far. 
         /// </summary>
         /// <returns></returns>
-        public double costOfBssf ()
+        public double costOfBssf()
         {
             if (bssf != null)
                 return (bssf.costOfRoute());
             else
-                return -1D; 
+                return -1D;
         }
 
         /// <summary>
@@ -331,7 +331,7 @@ namespace TSP
         /// <returns>results array for GUI that contains three ints: cost of solution, time spent to find solution, number of solutions found during search (not counting initial BSSF estimate)</returns>
         public string[] defaultSolveProblem()
         {
-            int i, swap, temp, count=0;
+            int i, swap, temp, count = 0;
             string[] results = new string[3];
             int[] perm = new int[Cities.Length];
             Route = new ArrayList();
@@ -389,20 +389,20 @@ namespace TSP
             timer.Start();
 
             List<List<double>> graph = generateGraph();
-            Tuple<double,List<int>> bestPath = findUpperBound(graph);
+            Tuple<double, List<int>> bestPath = findUpperBound(graph);
             List<State> stateList = new List<State>();
             stateList.Add(new State(graph));
             State minLowerBoundState = new State();
             List<State> newStates = new List<State>();
             int minLowerBoundIndex = 0;
 
-            
+
             /* This next section of code runs once for every State that's generated but not pruned.
                 This totals to
             */
             while (stateList.Count > 0 && timer.Elapsed.TotalMilliseconds < time_limit)
             {
-                if(stateList.Count > greatestTotalStates)
+                if (stateList.Count > greatestTotalStates)
                 {
                     greatestTotalStates = stateList.Count;
                 }
@@ -417,7 +417,8 @@ namespace TSP
                     {
                         case 1:
                             double candidate = newStates[i].getCurrentCost() + newStates[i].getGraph()[newStates[i].getCurrentNodeIndex()][0];
-                            if (candidate < bestPath.Item1) {
+                            if (candidate < bestPath.Item1)
+                            {
                                 bssfUpdateCount++;
                                 bestPath = Tuple.Create<double, List<int>>(candidate, newStates[i].getRoute());
                             }
@@ -433,7 +434,8 @@ namespace TSP
             }
 
             ArrayList foundBSSF = new ArrayList();
-            for(int i = 0; i < bestPath.Item2.Count; i++){
+            for (int i = 0; i < bestPath.Item2.Count; i++)
+            {
                 foundBSSF.Add(Cities[bestPath.Item2[i]]);
             }
             bssf = new TSPSolution(foundBSSF);
@@ -458,8 +460,9 @@ namespace TSP
             private int currentNodeIndex = 0;
             private List<int> route = new List<int>();
             private List<List<double>> graph = new List<List<double>>();
-            
-            public State() {
+
+            public State()
+            {
                 route.Add(0);
             }
 
@@ -479,7 +482,7 @@ namespace TSP
             {
                 return lowerBound;
             }
-      
+
             // This is so I can make a deep copy, rather than a shallow one.
             public State clone()
             {
@@ -488,7 +491,7 @@ namespace TSP
                 result.currentCost = currentCost;
                 result.lowerBound = lowerBound;
 
-                for(int i = 0; i < route.Count; i++)
+                for (int i = 0; i < route.Count; i++)
                 {
                     result.addToRoute(route[i]);
                 }
@@ -515,7 +518,7 @@ namespace TSP
             {
                 double result = currentCost;
                 int index = 0;
-                for(int i = 0; i < graph.Count; i++)
+                for (int i = 0; i < graph.Count; i++)
                 {
                     if (!route.Contains(i))
                     {
@@ -559,7 +562,7 @@ namespace TSP
             {
                 route.Add(input);
             }
-            
+
             /*
                0) Not finished
                There are two ways to be finished:
@@ -570,16 +573,16 @@ namespace TSP
             */
             public int finished(double upperBound)
             {
-                if(lowerBound > upperBound)
+                if (lowerBound > upperBound)
                 {
                     return 2;
                 }
-                if(route.Count >= graph.Count)
+                if (route.Count >= graph.Count)
                 {
                     return 1;
                 }
                 int result = 2;
-                for(int i = 1; i < graph.Count; i++)
+                for (int i = 1; i < graph.Count; i++)
                 {
                     if (!double.IsInfinity(graph[currentNodeIndex][i]))
                     {
@@ -591,7 +594,7 @@ namespace TSP
 
             public void clearRowAndColumn(int row, int col)
             {
-                for(int i = 0; i < graph.Count; i++)
+                for (int i = 0; i < graph.Count; i++)
                 {
                     graph[row][i] = double.PositiveInfinity;
                     graph[i][col] = double.PositiveInfinity;
@@ -624,7 +627,8 @@ namespace TSP
             State addableState = new State();
             for (int i = 1; i < node.Count; i++)
             {
-                if (!double.IsPositiveInfinity(node[i])) {
+                if (!double.IsPositiveInfinity(node[i]))
+                {
                     addableState = input.clone();
                     addableState.addToCurrentCost(node[i]);
                     addableState.setCurrentNodeIndex(i);
@@ -641,9 +645,9 @@ namespace TSP
         public int findMinLowerBoundIndex(List<State> input)
         {
             int result = 0;
-            for(int i = 0; i < input.Count; i++)
+            for (int i = 0; i < input.Count; i++)
             {
-                if(input[i].getLowerBound() < input[result].getLowerBound())
+                if (input[i].getLowerBound() < input[result].getLowerBound())
                 {
                     result = i;
                 }
@@ -651,30 +655,16 @@ namespace TSP
             return result;
         }
 
-        public List<List<double>> generateGraph()
-        {
-            List<List<double>> result = new List<List<double>>();
-            for (int i = 0; i < Cities.Length; i++)
-            {
-                result.Add(new List<double>());
-                for(int j = 0; j < Cities.Length; j++)
-                {
-                    result[i].Add(i!=j?Cities[i].costToGetTo(Cities[j]):double.PositiveInfinity);
-                }
-            }
-            return result;
-        }
-
         public Tuple<double, List<int>> findUpperBound(List<List<double>> graph)
         {
-            Tuple<double, List<int>> resultPath = new Tuple<double, List<int>>(double.PositiveInfinity,new List<int>());
+            Tuple<double, List<int>> resultPath = new Tuple<double, List<int>>(double.PositiveInfinity, new List<int>());
             Tuple<double, List<int>> tempPath = new Tuple<double, List<int>>(double.PositiveInfinity, new List<int>());
             for (int i = 0; i < 10; i++)
             {
                 tempPath = findRandomPath(graph);
-                if(tempPath != null)
+                if (tempPath != null)
                 {
-                    if(tempPath.Item1 < resultPath.Item1)
+                    if (tempPath.Item1 < resultPath.Item1)
                     {
                         resultPath = tempPath;
                     }
@@ -870,7 +860,7 @@ namespace TSP
             ts.Hours, ts.Minutes, ts.Seconds,
             ts.Milliseconds / 10);
 
-            results[COST] = "not implemented";    // load results into array here, replacing these dummy values
+            results[COST] = bssf.costOfRoute().ToString();    // load results into array here, replacing these dummy values
             results[TIME] = elapsedTime;
             results[COUNT] = "-1";
 
@@ -883,50 +873,105 @@ namespace TSP
 
             Stopwatch timer = new Stopwatch();
 
-            
-
             Tuple<double, List<int>> bestPath = new Tuple<double, List<int>>(double.PositiveInfinity, new List<int>());
-            double pheromoneRate = 0.000001;
-            int iterations = 10000;
+            
+            int iterations = 100000;
             SendAntResult sendAntResult;
             timer.Start();
-            
+
             List<List<double>> graph = generateGraph();
+            double pheromoneRate = 0.000005 * graph.Count;
 
             greedySolveProblem();
+            /*
+            ArrayList greedyCityRoute = bssf.Route;
+            List<int> greedyRoute = new List<int>();
+
+            // create the greedy route
+            for(int i = 0; i < greedyCityRoute.Count; ++i)
+            {
+                for(int j = 0; j < Cities.Length; ++j)
+                {
+                    if(greedyCityRoute[i] == Cities[j])
+                    {
+                        greedyRoute.Add(j);
+                    }
+                }
+            }*/
+
             double standard = double.PositiveInfinity;
             if (bssf != null)
             {
-                standard = findUpperBound(graph).Item1;//bssf.costOfRoute();
+                standard = bssf.costOfRoute(); //findUpperBound(graph).Item1;//
             }
 
             List<List<double>> graphWithPheromones = new List<List<double>>();
             for (int i = 0; i < graph.Count; i++)
             {
                 graphWithPheromones.Add(new List<double>());
-                for(int j = 0; j < graph.Count; j++)
+                for (int j = 0; j < graph.Count; j++)
                 {
-                    graphWithPheromones[i].Add(graph[i][j]);
+                    if (i != j)
+                    {
+                        graphWithPheromones[i].Add(graph[i][j]);// Math.Pow(graph[i][j]/1000, 3));//10000);//
+                    }
+                    else
+                    {
+                        graphWithPheromones[i].Add(double.PositiveInfinity);
+                    }
                 }
             }
 
+            /*
+            Dictionary<int, int> edgesInGreedyRoute = new Dictionary<int, int>();
+            int fromNode = 0;
+            int lastNode = 0;
+            for (int i = 0; i < greedyRoute.Count; i++)
+            {
+                edgesInGreedyRoute[fromNode] = greedyRoute[i];
+                fromNode = greedyRoute[i];
+            }
+            edgesInGreedyRoute[fromNode] = 0;
+
+            double total = 0;
+            int count = 0;
+            for(int i = 0; i < graphWithPheromones.Count; ++i)
+            {
+                total = 0.0;
+                count = 0;
+                for(int j = 0; j < graphWithPheromones.Count; ++j)
+                {
+                    if(graphWithPheromones[i][j] != double.PositiveInfinity && j != edgesInGreedyRoute[i])
+                    {
+                        count++;
+                        total += graphWithPheromones[i][j];
+                    }
+                }
+
+                total *= count - 1;
+                graphWithPheromones[i][edgesInGreedyRoute[i]] -= (total) * .9;
+            }
+            */
+
+            Random rnd = new Random();
             for (int i = 0; i < iterations; i++)
             {
-                sendAntResult = sendAnt(graph, graphWithPheromones, pheromoneRate, standard);
+                sendAntResult = sendAnt(graph, graphWithPheromones, pheromoneRate, standard, rnd);
                 graphWithPheromones = sendAntResult.Newpheromones;
                 if (bestPath.Item1 > sendAntResult.Cost)
                 {
+                    standard = sendAntResult.Cost;
                     bestPath = Tuple.Create<double, List<int>>(sendAntResult.Cost, sendAntResult.Route);
                 }
             }
             //if (bestPath.Item1 < bssf.costOfRoute())
             //{
-                ArrayList foundBSSF = new ArrayList();
-                for (int i = 0; i < bestPath.Item2.Count; i++)
-                {
-                    foundBSSF.Add(Cities[bestPath.Item2[i]]);
-                }
-                bssf = new TSPSolution(foundBSSF);
+            ArrayList foundBSSF = new ArrayList();
+            for (int i = 0; i < bestPath.Item2.Count; i++)
+            {
+                foundBSSF.Add(Cities[bestPath.Item2[i]]);
+            }
+            bssf = new TSPSolution(foundBSSF);
             //}
             timer.Stop();
 
@@ -937,60 +982,41 @@ namespace TSP
             return results;
         }
 
-        // Generate random tours through the graph to get an idea as to what
-        // the upper bound might be. It's O(n) where n is the size of the graph,
-        // but there's a big constant of 100000 attached to that.
-        public SendAntResult sendAnt(List<List<double>> graph, List<List<double>> graphWithPheromones, double pheromoneRate, double standard)
+        public SendAntResult sendAnt(List<List<double>> graph, List<List<double>> graphWithPheromones, double pheromoneRate, double standard, Random rnd)
         {
             List<List<double>> editableGraph = new List<List<double>>(); //Do a deep copy
-            for(int i = 0; i < graphWithPheromones.Count; i++)
+            for (int i = 0; i < graphWithPheromones.Count; i++)
             {
                 editableGraph.Add(new List<double>());
-                for(int j = 0; j < graphWithPheromones.Count; j++)
+                for (int j = 0; j < graphWithPheromones.Count; j++)
                 {
                     editableGraph[i].Add(graphWithPheromones[i][j]);
                 }
             }
-
             List<int> resultRoute = new List<int>();
             double cost = 0.0;
-            Random rnd = new Random();
 
-            int currentNode = 0;
+            int lastNode = rnd.Next(0, editableGraph.Count - 1);
+            int currentNode = lastNode;
             int nextEdge = -1;
-            while(nextEdge != 0){
-                nextEdge = selectEdge(/*graphWithPheromones[currentNode],*/ editableGraph[currentNode]);
+            while (nextEdge != lastNode)
+            {
+                nextEdge = selectEdge(editableGraph[currentNode], rnd);
                 if (nextEdge == -1)
                 {
                     return new SendAntResult(double.PositiveInfinity, null, graphWithPheromones);
                 }
-                if(nextEdge != 0 || resultRoute.Count == editableGraph.Count - 1)
-                {
-                    resultRoute.Add(nextEdge);
-                    cost += graph[currentNode][nextEdge];
-                    editableGraph = clearRowAndColumn(editableGraph, currentNode, nextEdge);
-                    currentNode = nextEdge;
-                }
-                else
-                {
-                    bool end = true;
-                    for(int i = 1; i < editableGraph[currentNode].Count; i++)
-                    {
-                        if (!double.IsPositiveInfinity(editableGraph[currentNode][i]))
-                        {
-                            end = false;
-                        }
-                    }
-                    if (end)
-                    {
-                        return new SendAntResult(double.PositiveInfinity, null, graphWithPheromones);
-                    }
-                    nextEdge = -1;
-                }
-                
-            }
 
-            //graphWithPheromones = updateGraphWithPheromones(resultRoute, graphWithPheromones, pheromoneRate * Math.Pow(standard/cost,10));
+                resultRoute.Add(nextEdge);
+                cost += graph[currentNode][nextEdge];
+                editableGraph = clearRowAndColumn(editableGraph, currentNode, nextEdge);
+                if (resultRoute.Count < editableGraph.Count - 1)
+                {
+                    editableGraph[nextEdge][lastNode] = double.PositiveInfinity;
+                }
+                currentNode = nextEdge;
+            }
+            graphWithPheromones = updateGraphWithPheromones(resultRoute, graphWithPheromones, pheromoneRate * standard/cost);
 
             SendAntResult result = new SendAntResult(cost, resultRoute, graphWithPheromones);
 
@@ -1019,7 +1045,6 @@ namespace TSP
 
             double total;
             double newTotal;
-            double num;
             foreach (int key in edgesInRoute.Keys)
             {
                 total = 0.0;
@@ -1033,22 +1058,15 @@ namespace TSP
                     }
                 }
 
-                foreach (double edge in result[key])
-                {
-                    if (edge != Double.PositiveInfinity)
-                    {
-                        num = total - edge;
-                        newTotal += num;
-                    }
-                }
-                if (result[key][edgesInRoute[key]] - (pheromoneRate * newTotal) > 10)
-                {
+                newTotal = total * graphWithPheromones.Count - 1;
+                //if (result[key][edgesInRoute[key]] - (pheromoneRate * newTotal) > 0)
+                //{
                     result[key][edgesInRoute[key]] -= (pheromoneRate * newTotal);
-                }
-                else
-                {
-                    Console.Write("I broke");
-                }
+                //}
+                //else
+                //{
+                    //Console.Write("I broke");
+               // }
             }
 
             return result;
@@ -1060,32 +1078,30 @@ namespace TSP
         /// <param name="pheromones"></param>
         /// <param name="edges"></param>
         /// <returns></returns>
-        int selectEdge(/*List<double> pheromones,*/ List<double> edges)
+        int selectEdge(/*List<double> pheromones,*/ List<double> edges, Random rnd)
         {
-            int result = 0;
-
             double total = 0;
             double newTotal = 0;
             double probabilityTotal = 0;
             Dictionary<int, double> probability = new Dictionary<int, double>();
-            Random rnd = new Random();
+
+            int count = 0;
 
             foreach(double edge in edges)
             {
                 if (edge != Double.PositiveInfinity)
                 {
+                    count++;
                     total += edge;
                 }
             }
-
-            foreach (double edge in edges)
+            
+            if(total == 0)
             {
-                if (edge != Double.PositiveInfinity)
-                {
-                    double num = total - edge;
-                    newTotal += num;
-                }
+                return -1;
             }
+
+            newTotal = total * (count - 1);
 
             for(int i = 0; i < edges.Count; i++)
             {
@@ -1097,9 +1113,19 @@ namespace TSP
                     probability.Add(i, probabilityTotal);
                 }
             }
+
             double random = rnd.NextDouble() * (100);
 
-            int returnEdge = 0;
+            if (probability.Count == 1)
+            {
+                foreach(int key in probability.Keys)
+                {
+                    return key;
+                }
+            }
+
+
+            int returnEdge = -1;
             for( int i = 0; i < edges.Count; i++)
             {
                 if (edges[i] != Double.PositiveInfinity)
@@ -1134,6 +1160,21 @@ namespace TSP
                 input[i][col] = double.PositiveInfinity;
             }
             return input;
+        }
+
+
+        public List<List<double>> generateGraph()
+        {
+            List<List<double>> result = new List<List<double>>();
+            for (int i = 0; i < Cities.Length; i++)
+            {
+                result.Add(new List<double>());
+                for (int j = 0; j < Cities.Length; j++)
+                {
+                    result[i].Add(i != j ? Cities[i].costToGetTo(Cities[j]) : double.PositiveInfinity);
+                }
+            }
+            return result;
         }
 
         #endregion
